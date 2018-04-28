@@ -61,19 +61,11 @@ class My_Wp_Tools_Public {
 	 */
 	public function enqueue_styles() {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in My_Wp_Tools_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The My_Wp_Tools_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/my-wp-tools-public.css', array(), $this->version, 'all' );
+		// Load bootstrap.
+	wp_enqueue_style( 'bootstrap-css', plugin_dir_url( __FILE__ ) . 'bootstrap-4.1.0/dist/css/bootstrap.min.css', array(), '1.0.0', 'all');
+	
+// Custom CSS file.
+	wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/my-wp-tools-public.css', array(), $this->version, 'all' );
 
 	}
 
@@ -84,20 +76,129 @@ class My_Wp_Tools_Public {
 	 */
 	public function enqueue_scripts() {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in My_Wp_Tools_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The My_Wp_Tools_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
+		// Load the bootstrap js files.
+	wp_enqueue_script( 'bootstrap-js', plugin_dir_url( __FILE__ ) . 'bootstrap-4.1.0/dist/js/bootstrap.min.js', array(), '1.0.0', 'all');
+	
+// Custom js.
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/my-wp-tools-public.js', array( 'jquery' ), $this->version, false );
 
 	}
+
+	
+	/**
+	* Count post views.
+	*/
+	
+	function mwt_post_views($content) {
+		if(is_single() && !is_home()) {
+			global $post;
+		$content .= $this->mwt_getPostViews($post->ID);
+		}
+		return $content;
+	}
+
+	// function to count views.
+function mwt_setPostViews($post) {
+	$postID = $post->ID;
+    $count_key = 'post_views_count';
+    $count = get_post_meta($postID, $count_key, true);
+    if($count==''){
+        $count = 1;
+        delete_post_meta($postID, $count_key);
+        add_post_meta($postID, $count_key, '1');
+    }else{
+        $count++;
+        update_post_meta($postID, $count_key, $count);
+    }
+}
+
+// function to display number of posts.
+function mwt_getPostViews($postID){
+    $count_key = 'post_views_count';
+    $count = get_post_meta($postID, $count_key, true);
+    if($count==''){
+        delete_post_meta($postID, $count_key);
+        add_post_meta($postID, $count_key, '1');
+        return "<br><span>Views: 1</span>";
+    }
+    return '<br><span>Views: '.$count . '</span>';
+}
+
+
+/**
+* Adds a grid of the most popular posts for today using a shortcode.
+*/
+
+function mwpt_most_popular_today($content) {
+
+	if ( is_home() || is_front_page() ) {
+		
+		// Query the database helped by wordpress popular posts pluginn.
+$popular_posts = new WPP_Query( array('range' => 'last7days', 'order_by' => 'views', 'limit' => 24) );
+
+// Get the thumbnail url, the thumbnail alt, the post title of each post.
+$ppop_post = [];
+foreach($popular_posts->get_posts() as $item) {
+	$thumb_id = get_post_thumbnail_id($item->id);
+	$thumb_url = wp_get_attachment_image_src($thumb_id, 'thumbnail', true);
+	$thumb_alt = (get_post_meta($thumb_id, '_wp_attachment_image_alt', true) != '') ? get_post_meta($thumb_id, '_wp_attachment_image_alt', true) : $item->title;
+	
+	// Create the object for each post.
+	$pop = new stdClass();
+	$pop->thumb_url = $thumb_url[0];
+	$pop->thumb_alt = $thumb_alt;
+	$pop->post_url = get_permalink($item->id);
+	$pop->post_title = $item->title;
+array_push($ppop_post, $pop);
+	
+}
+
+return $content . '<p><h3>Most Popular - Today</h3></p>' . $this->create_grid($ppop_post);
+}
+
+return $content;
+}
+
+
+function create_grid($ppop_post) {
+
+	$grid = '<table style="width:100%; table-layout: fixed;">';
+
+$col = 1;
+$max_col = 4;
+$num_array_elements = 1;
+foreach($ppop_post as $item) {
+	
+	if ($col == 1) {
+		$grid .= '<tr>';
+	}
+	
+	$grid .= '<td style="width: 25%;">' .
+	'<img src="' . $item->thumb_url . '" alt="' . $item->thumb_alt . '" height="130" width="130">' .
+	'<h4 style="font-size:17px;"><a href="' . $item->post_url . '"><b>' . $item->post_title . '</b></a></h4>' .
+	'</td>';
+	 
+if ($col == $max_col || $num_array_elements == count($ppop_post)) {
+	$grid .= '</tr>';
+	$col = 1;
+	}
+	
+		$col++;
+	$num_array_elements++;
+}
+
+$grid .= '</table>';
+
+// This code is here only for test bootstrap integration.
+$html = '<div class="alert alert-success alert-dismissible fade show" role="alert">' .
+  '<strong>Success!</strong> This is a bootstrap alert message.' .
+  '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' .
+    '<span aria-hidden="true">&times;</span>' .
+  '</button>' .
+'</div>';
+
+return $grid . '<br>' . $html;
+
+}
 
 }

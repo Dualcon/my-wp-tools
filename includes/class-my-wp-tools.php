@@ -173,6 +173,14 @@ class My_Wp_Tools {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 
+		// Post view counter.
+		//$this->loader->add_filter('the_content', $plugin_public, 'mwt_post_views');
+		//$this->loader->add_action('the_post', $plugin_public, 'mwt_setPostViews');
+
+	// Add a shortcode to home page.
+$this->loader->add_action('mwpt-most-popular-today', $plugin_public, 'mwpt_most_popular_today');
+add_shortcode('mwpt-most-popular-today', array( $plugin_public, 'mwpt_most_popular_today'));
+
 	}
 
 	/**
