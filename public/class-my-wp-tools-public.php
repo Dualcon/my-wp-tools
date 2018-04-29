@@ -133,8 +133,9 @@ function mwpt_most_popular_today($content) {
 
 	if ( is_home() || is_front_page() ) {
 		
-		// Query the database helped by wordpress popular posts pluginn.
-$popular_posts = new WPP_Query( array('range' => 'last7days', 'order_by' => 'views', 'limit' => 24) );
+		// Query the database with the wordpress popular posts plugin.
+$popular_posts = new WPP_Query( array('post_type' => 'post', 'range' => 'last7days', 'order_by' => 'views', 'limit' => 24) );
+
 
 // Get the thumbnail url, the thumbnail alt, the post title of each post.
 $ppop_post = [];
@@ -162,42 +163,35 @@ return $content;
 
 function create_grid($ppop_post) {
 
-	$grid = '<table style="width:100%; table-layout: fixed;">';
+	$grid = '<div class="container-fluid">';
 
-$col = 1;
+	$col = 1;
 $max_col = 4;
 $num_array_elements = 1;
 foreach($ppop_post as $item) {
 	
 	if ($col == 1) {
-		$grid .= '<tr>';
+		$grid .= '<div class="row">';
 	}
 	
-	$grid .= '<td style="width: 25%;">' .
+	$grid .= '<div class="col-sm">' .
 	'<img src="' . $item->thumb_url . '" alt="' . $item->thumb_alt . '" height="130" width="130">' .
 	'<h4 style="font-size:17px;"><a href="' . $item->post_url . '"><b>' . $item->post_title . '</b></a></h4>' .
-	'</td>';
+	'</div>';
 	 
 if ($col == $max_col || $num_array_elements == count($ppop_post)) {
-	$grid .= '</tr>';
+	$grid .= '</div>';
 	$col = 1;
 	}
 	
 		$col++;
 	$num_array_elements++;
+
 }
 
-$grid .= '</table>';
+$grid .= '</div>';
 
-// This code is here only for test bootstrap integration.
-$html = '<div class="alert alert-success alert-dismissible fade show" role="alert">' .
-  '<strong>Success!</strong> This is a bootstrap alert message.' .
-  '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' .
-    '<span aria-hidden="true">&times;</span>' .
-  '</button>' .
-'</div>';
-
-return $grid . '<br>' . $html;
+return $grid;
 
 }
 
