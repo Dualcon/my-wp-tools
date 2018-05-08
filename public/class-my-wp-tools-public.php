@@ -129,6 +129,60 @@ class My_Wp_Tools_Public
      */
 	 
 	 
+	 function mwpt_most_popular_latest($atts) {
+	 
+	 if (is_home() || is_front_page()) {
+
+	 // Define attributes and their defaults.
+	 extract( shortcode_atts( array (
+	 // This is the original Wordpress variable.
+	//'numberposts' => '24',
+	'limit' => '10',
+	'offset' => 0,
+	'category' => 0,
+	'orderby' => 'post_date',
+	'order' => 'DESC',
+	'include' => '',
+	'exclude' => '',
+	'meta_key' => '',
+	'meta_value' =>'',
+	'post_type' => 'post',
+	'post_status' => 'publish',
+	'suppress_filters' => true,
+	// This is not from wordpress, just a custom tag.
+	'header' => ''
+), $atts));
+	 
+	 $popular_posts = wp_get_recent_posts(array('numberposts' => $limit));
+
+	 // Get the thumbnail url, the thumbnail alt, the post title of each post.
+            $ppop_post = [];
+            $res = '';
+			foreach ($popular_posts as $item) {
+                
+				$thumb_id = get_post_thumbnail_id($item['ID']);
+				$thumb_url = wp_get_attachment_image_src($thumb_id, 'thumbnail', true);
+                $thumb_alt = (get_post_meta($thumb_id, '_wp_attachment_image_alt', true) != '') ? get_post_meta($thumb_id, '_wp_attachment_image_alt', true) : $item['post_title'];
+				
+                // Create the object for each post.
+                $pop = new stdClass();
+                $pop->thumb_url = $thumb_url[0];
+                $pop->thumb_alt = $thumb_alt;
+                $pop->post_url = get_permalink($item['ID']);
+                $pop->post_title = $item['post_title'];
+                array_push($ppop_post, $pop);
+
+            }
+	
+			return $content .
+			(($header) ? '<p><h3>' . $header . '</h3></p>' : '') .
+			$this->create_grid($ppop_post);
+			
+		}
+
+        return $content;
+	 }
+	 
     function mwpt_most_popular_today($atts) {
         
 		if (is_home() || is_front_page()) {
@@ -147,7 +201,7 @@ class My_Wp_Tools_Public
 
             // Query the database with the wordpress popular posts plugin.
             $popular_posts = new WPP_Query(array('post_type' => $post_type, 'range' => $range, 'order_by' => $order_by, 'limit' => $limit, 'time_quantity' => $time_quantity, 'title_length' => $title_length, 'time_unit' => $time_unit));
-
+			
 // Get the thumbnail url, the thumbnail alt, the post title of each post.
             $ppop_post = [];
             foreach ($popular_posts->get_posts() as $item) {
@@ -190,7 +244,7 @@ class My_Wp_Tools_Public
             }
 
             $grid .= '<div class="col-md-3 col-sm-3 col-xs-3 pt-cv-content-item pt-cv-1-col">' .
-                '<img src="' . $item->thumb_url . '" alt="' . $item->thumb_alt . '" class="pt-cv-thumbnail" height="225" width="225">' .
+                '<a href="' . $item->post_url . '"><img src="' . $item->thumb_url . '" alt="' . $item->thumb_alt . '" class="pt-cv-thumbnail" height="225" width="225"></a>' .
                 '<h4 style="font-size:17px;"><a href="' . $item->post_url . '"><b>' . $item->post_title . '</b></a></h4>' .
                 '</div>';
 

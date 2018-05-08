@@ -179,7 +179,8 @@ class My_Wp_Tools {
 
 	// Shortcode for create grids based on Wordpress Popular Posts plugin.
 add_shortcode('mwpt-most-popular-today', array( $plugin_public, 'mwpt_most_popular_today'));
-
+// Shortcode to create a custom latest videos grid.
+add_shortcode('mwpt-most-popular-latest', array( $plugin_public, 'mwpt_most_popular_latest'));
 
 	}
 
